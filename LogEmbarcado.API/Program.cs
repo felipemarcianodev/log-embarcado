@@ -1,20 +1,41 @@
+using LogEmbarcado.API;
 using LogEmbarcado.API.Context;
 using LogEmbarcado.API.Extensions;
 using LogEmbarcado.API.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 #region Services
 builder.Services.AddControllers();
 
-// Adicionar como serviço Singleton para uso no middleware
 builder.Services.AddSingleton<MetricsService>();
 builder.Services.AddHostedService<MetricsCleanupService>();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "LogEmbarcado API",
+        Version = "v1",
+        Description = "API para monitoramento de logs e métricas de performance",
+        Contact = new OpenApiContact
+        {
+            Name = "Seu Nome",
+            Email = "seu.email@exemplo.com"
+        }
+    });
+    // Incluir comentários XML se você quiser documentação detalhada
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);
+});
 
 if (builder.Configuration.GetValue<bool>("FeatureFlags:DetailedPerformanceLogging", true))
 {
-    var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Metrics.db");
+    var dbPath = Folders.GetDatabasePath();
 
     builder.Services.AddDbContext<MetricsDbContext>(options => options.UseSqlite($"Data Source={dbPath}"));
 }
@@ -23,6 +44,18 @@ if (builder.Configuration.GetValue<bool>("FeatureFlags:DetailedPerformanceLoggin
 
 #region Configure Pipeline.
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "LogEmbarcado API v1");
+        c.RoutePrefix = string.Empty;
+        c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
+        //c.DefaultModelsExpandDepth(-1);
+    });
+}
 
 app.UsePerformanceMonitoring();
 

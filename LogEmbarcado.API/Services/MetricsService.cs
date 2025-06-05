@@ -136,7 +136,7 @@ namespace LogEmbarcado.API.Services
                 var dbContext = scope.ServiceProvider.GetRequiredService<MetricsDbContext>();
 
                 // Verificar tamanho do arquivo SQLite
-                var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app_metrics.db");
+                var dbPath = Folders.GetDatabasePath();
                 var fileInfo = new FileInfo(dbPath);
 
                 // Se ultrapassar 100MB, remover os registros mais antigos
@@ -312,28 +312,34 @@ namespace LogEmbarcado.API.Services
 
         private double GetCpuUsage()
         {
-            // Esta é uma implementação simplificada
-            // Em produção, você pode usar PerformanceCounter ou outras métricas do sistema
-            TimeSpan startCpuUsage = _currentProcess.TotalProcessorTime;
-            DateTime startTime = DateTime.UtcNow;
+            try
+            {
+                // Solução simplificada: usar o tempo total do processo
+                _currentProcess.Refresh();
 
-            Thread.Sleep(100); // Pequena amostra de tempo
+                // Calcular uma aproximação baseada no tempo total de CPU
+                var totalCpuTime = _currentProcess.TotalProcessorTime.TotalMilliseconds;
+                var upTime = (DateTime.UtcNow - _currentProcess.StartTime).TotalMilliseconds;
 
-            TimeSpan endCpuUsage = _currentProcess.TotalProcessorTime;
-            DateTime endTime = DateTime.UtcNow;
+                // Porcentagem aproximada considerando todos os cores
+                var cpuPercent = (totalCpuTime / upTime / Environment.ProcessorCount) * 100;
 
-            double cpuUsedMs = (endCpuUsage - startCpuUsage).TotalMilliseconds;
-            double totalMsPassed = (endTime - startTime).TotalMilliseconds;
-            double cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
+                var result = Math.Min(100, Math.Max(0, cpuPercent));
 
-            return cpuUsageTotal * 100; // Converter para porcentagem
+                // Arredondar para 4 casas decimais
+                return Math.Round(result, 4);
+            }
+            catch
+            {
+                return 0.0;
+            }
         }
 
         private long GetDatabaseFileSize()
         {
             try
             {
-                var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app_metrics.db");
+                var dbPath = Folders.GetDatabasePath();
                 return File.Exists(dbPath) ? new FileInfo(dbPath).Length : 0;
             }
             catch

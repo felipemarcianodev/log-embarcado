@@ -7,7 +7,7 @@ namespace LogEmbarcado.API.Controllers
 {
     [ApiController]
     [Route("metrics")]
-    [Authorize(Roles = "Admin")] // Restrinja o acesso conforme necessário
+    //[Authorize(Roles = "Admin")] // Restrinja o acesso conforme necessário
     public class MetricsController : ControllerBase
     {
         #region Private Fields

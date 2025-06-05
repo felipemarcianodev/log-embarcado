@@ -1,4 +1,5 @@
 ﻿using LogEmbarcado.API.Context;
+using Microsoft.EntityFrameworkCore;
 
 namespace LogEmbarcado.API.Services
 {
@@ -94,7 +95,7 @@ namespace LogEmbarcado.API.Services
         {
             try
             {
-                var backupFolder = GetBackupFolder();
+                var backupFolder = Folders.GetBackupFolder();
 
                 if (!Directory.Exists(backupFolder))
                     return;
@@ -136,7 +137,7 @@ namespace LogEmbarcado.API.Services
         {
             try
             {
-                var dbPath = GetDatabasePath();
+                var dbPath = Folders.GetDatabasePath();
 
                 if (!File.Exists(dbPath))
                 {
@@ -144,7 +145,7 @@ namespace LogEmbarcado.API.Services
                     return;
                 }
 
-                var backupFolder = GetBackupFolder();
+                var backupFolder = Folders.GetBackupFolder();
 
                 // Criar pasta de backup se não existir
                 if (!Directory.Exists(backupFolder))
@@ -182,7 +183,7 @@ namespace LogEmbarcado.API.Services
         {
             try
             {
-                var dbPath = GetDatabasePath();
+                var dbPath = Folders.GetDatabasePath();
 
                 if (!File.Exists(dbPath))
                     return;
@@ -225,16 +226,6 @@ namespace LogEmbarcado.API.Services
             {
                 _logger.LogError(ex, "Erro ao aplicar limites de armazenamento");
             }
-        }
-
-        private string GetBackupFolder()
-        {
-            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs", "MetricsBackups");
-        }
-
-        private string GetDatabasePath()
-        {
-            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app_metrics.db");
         }
 
         private async Task PerformCleanupAsync()
@@ -305,7 +296,10 @@ namespace LogEmbarcado.API.Services
                 var dbContext = scope.ServiceProvider.GetRequiredService<MetricsDbContext>();
 
                 // Obter tamanho antes do vacuum
-                var dbPath = GetDatabasePath();
+                var dbPath = Folders.GetDatabasePath();
+                if (!File.Exists(dbPath))
+                    return;
+
                 var sizeBefore = new FileInfo(dbPath).Length;
 
                 // Executar VACUUM no SQLite para recuperar espaço
