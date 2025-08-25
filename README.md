@@ -343,3 +343,13 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para de
 ## 🏷️ Tags
 
 `asp.net-core` `dotnet` `monitoring` `logging` `metrics` `sqlite` `performance` `self-contained` `embedded-system` `api-monitoring`
+
+## 👨‍💻 Autor
+
+**Felipe Santos Marciano**
+- GitHub: [@felipemarcianodev](https://github.com/felipemarcianodev)
+- LinkedIn: [Felipe Santos Marciano](https://www.linkedin.com/in/felipe-santos-marciano/)
+
+---
+
+⭐ **Se este projeto foi útil para você, considere dar uma estrela!**
